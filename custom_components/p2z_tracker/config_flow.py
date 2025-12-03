@@ -75,7 +75,6 @@ class P2ZTrackerOptionsFlow(config_entries.OptionsFlow):
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
-        self.config_entry = config_entry
         self._current_zones: list[dict[str, Any]] = config_entry.options.get(
             CONF_TRACKED_ZONES, []
         )
@@ -92,17 +91,17 @@ class P2ZTrackerOptionsFlow(config_entries.OptionsFlow):
         """Show zone management menu."""
         if user_input is not None:
             action = user_input.get("action")
-            if action == "add":
+            if action == "add_zone":
                 return await self.async_step_add_zone()
-            elif action == "remove" and self._current_zones:
+            elif action == "remove_zone" and self._current_zones:
                 return await self.async_step_remove_zone()
             elif action == "done":
                 return self.async_create_entry(title="", data={})
 
         # Build menu options
-        menu_options = ["add"]
+        menu_options = ["add_zone"]
         if self._current_zones:
-            menu_options.append("remove")
+            menu_options.append("remove_zone")
         menu_options.append("done")
 
         # Show current zones
@@ -186,7 +185,7 @@ class P2ZTrackerOptionsFlow(config_entries.OptionsFlow):
                         CONF_RETENTION_DAYS, default=DEFAULT_RETENTION_DAYS
                     ): selector.NumberSelector(
                         selector.NumberSelectorConfig(
-                            min=7,
+                            min=0,
                             max=3650,
                             mode=selector.NumberSelectorMode.BOX,
                             unit_of_measurement="days",

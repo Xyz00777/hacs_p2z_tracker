@@ -5,10 +5,12 @@
     "@xyz00777"
   ],
   "config_flow": true,
-  "dependencies": ["history"],
+  "dependencies": [
+    "history"
+  ],
   "documentation": "https://github.com/xyz00777/hacs_p2z_tracker",
-  "integration_type": "helper",
+  "integration_type": "service",
   "iot_class": "calculated",
   "issue_tracker": "https://github.com/xyz00777/hacs_p2z_tracker/issues",
-  "version": "0.1.0"
+  "version": "0.1.1"
 }

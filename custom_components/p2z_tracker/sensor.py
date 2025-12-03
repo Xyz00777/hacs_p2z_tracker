@@ -11,6 +11,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import UnitOfTime
 from homeassistant.core import callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
@@ -25,6 +26,7 @@ from .const import (
     CONF_PERSON_ENTITY,
     CONF_TRACKED_ZONES,
     CONF_ZONE_NAME,
+    DOMAIN,
     PERIOD_MONTH,
     PERIOD_TODAY,
     PERIOD_WEEK,
@@ -107,6 +109,15 @@ class ZoneTimeSensor(CoordinatorEntity[P2ZDataUpdateCoordinator], SensorEntity):
         # Set name
         period_label = period.capitalize()
         self._attr_name = f"Time at {display_name} {period_label}"
+
+        # Set device info to group all sensors under one device
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{person_entity}_zone_tracker")},
+            name=f"Zone Tracker: {person_entity.replace('person.', '').replace('_', ' ').title()}",
+            manufacturer="Person Zone Time Tracker",
+            model="Zone Time Tracking",
+            entry_type=None,
+        )
 
     @property
     def native_value(self) -> float | None:

@@ -22,8 +22,8 @@
                 "title": "Manage Tracked Zones",
                 "description": "**Currently Tracked Zones:**\n\n{current_zones}",
                 "menu_options": {
-                    "add": "Add new zone to track",
-                    "remove": "Remove tracked zone",
+                    "add_zone": "Add new zone to track",
+                    "remove_zone": "Remove tracked zone",
                     "done": "Finish"
                 }
             },
@@ -35,7 +35,7 @@
                     "display_name": "Display Name (Optional)",
                     "enable_backfill": "Enable Historical Backfill",
                     "backfill_days": "Days to Backfill",
-                    "retention_days": "Data Retention Period"
+                    "retention_days": "Data Retention Period (0 = Unlimited)"
                 }
             },
             "remove_zone": {
