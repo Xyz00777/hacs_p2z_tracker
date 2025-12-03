@@ -39,10 +39,28 @@
                 }
             },
             "remove_zone": {
-                "title": "Remove Tracked Zone",
-                "description": "Select a zone to stop tracking.",
+                "title": "Remove Zone",
+                "description": "Select a zone to remove from tracking.",
                 "data": {
                     "zone_to_remove": "Zone to Remove"
+                }
+            },
+            "edit_zone": {
+                "title": "Edit Zone",
+                "description": "Select a zone to edit.",
+                "data": {
+                    "zone_to_edit": "Zone to Edit"
+                }
+            },
+            "configure_zone": {
+                "title": "Configure Zone",
+                "description": "Update settings for this zone.",
+                "data": {
+                    "display_name": "Zone Label",
+                    "enable_backfill": "Enable Historical Backfill",
+                    "backfill_days": "Days to Backfill",
+                    "retention_days": "Data Retention Period",
+                    "enable_averages": "Enable Daily Average Sensors"
                 }
             }
         },

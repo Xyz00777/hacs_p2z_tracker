@@ -20,6 +20,13 @@ from .const import (
     PERIOD_MONTH,
     PERIOD_TODAY,
     PERIOD_WEEK,
+    PERIOD_MONDAY,
+    PERIOD_TUESDAY,
+    PERIOD_WEDNESDAY,
+    PERIOD_THURSDAY,
+    PERIOD_FRIDAY,
+    PERIOD_SATURDAY,
+    PERIOD_SUNDAY,
 )
 
 if TYPE_CHECKING:
@@ -44,6 +51,7 @@ class P2ZDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, float]]
         self.config_entry = config_entry
         self._person_entity = config_entry.data[CONF_PERSON_ENTITY]
         self._backfilled = False
+        self._averages_data: dict[str, dict[str, float]] = {}
         self.last_update_success_time: datetime | None = None
 
     async def _async_update_data(self) -> dict[str, dict[str, float]]:
@@ -59,8 +67,27 @@ class P2ZDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, float]]
         zone_data = {}
         for zone_config in tracked_zones:
             zone_name = zone_config[CONF_ZONE_NAME]
+            enable_averages = zone_config.get(CONF_ENABLE_AVERAGES, False)
+            
             try:
-                zone_data[zone_name] = await self._calculate_zone_times(zone_name)
+                # Calculate standard periods (today, week, month)
+                times = await self._calculate_zone_times(zone_name)
+                
+                # Calculate averages if enabled
+                if enable_averages:
+                    # Check if we need to calculate averages (first run or new day)
+                    # We store averages in self._averages_data to avoid querying history every update
+                    if zone_name not in self._averages_data:
+                        retention = zone_config.get(CONF_RETENTION_DAYS, 0)
+                        # Default to 90 days if unlimited (0) to keep performance reasonable
+                        days = retention if retention > 0 else 90
+                        self._averages_data[zone_name] = await self._calculate_weekday_averages(zone_name, days)
+                    
+                    # Merge averages into times
+                    times.update(self._averages_data[zone_name])
+                
+                zone_data[zone_name] = times
+                
             except Exception as err:  # pylint: disable=broad-except
                 LOGGER.error("Error calculating time for zone %s: %s", zone_name, err)
                 # Return 0 values on error to keep sensor available
@@ -68,6 +95,13 @@ class P2ZDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, float]]
                     PERIOD_TODAY: 0.0,
                     PERIOD_WEEK: 0.0,
                     PERIOD_MONTH: 0.0,
+                    PERIOD_MONDAY: 0.0,
+                    PERIOD_TUESDAY: 0.0,
+                    PERIOD_WEDNESDAY: 0.0,
+                    PERIOD_THURSDAY: 0.0,
+                    PERIOD_FRIDAY: 0.0,
+                    PERIOD_SATURDAY: 0.0,
+                    PERIOD_SUNDAY: 0.0,
                 }
 
         self.last_update_success_time = dt_util.now()
@@ -219,3 +253,76 @@ class P2ZDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, float]]
         days_since_monday = dt.weekday()
         week_start = dt - timedelta(days=days_since_monday)
         return dt_util.start_of_local_day(week_start)
+
+    async def _calculate_weekday_averages(self, zone_name: str, days: int) -> dict[str, float]:
+        """Calculate average time spent in zone per weekday over the last X days."""
+        now = dt_util.now()
+        start_time = now - timedelta(days=days)
+        
+        # Get zone friendly name
+        zone_entity_id = f"zone.{zone_name}" if not zone_name.startswith("zone.") else zone_name
+        zone_state = self.hass.states.get(zone_entity_id)
+        if zone_state is None:
+            return {}
+        target_zone = zone_state.attributes.get("friendly_name", zone_name.replace("zone.", ""))
+
+        # Fetch history
+        states = await get_instance(self.hass).async_add_executor_job(
+            history.get_significant_states,
+            self.hass,
+            start_time,
+            now,
+            [self._person_entity],
+            None,
+            True, # include_start_time_state
+            True, # significant_changes_only
+        )
+
+        if not states or self._person_entity not in states:
+            return {}
+
+        person_states = states[self._person_entity]
+        
+        # Buckets for each weekday (0=Monday, 6=Sunday)
+        # total_seconds: sum of duration
+        # unique_days: set of unique dates (YYYY-MM-DD) encountered for this weekday
+        weekday_stats = {i: {"total_seconds": 0.0, "unique_days": set()} for i in range(7)}
+        
+        for i in range(len(person_states) - 1):
+            state = person_states[i]
+            next_state = person_states[i + 1]
+            
+            if state.state == target_zone:
+                duration = (next_state.last_changed - state.last_changed).total_seconds()
+                weekday = state.last_changed.weekday()
+                date_str = state.last_changed.strftime("%Y-%m-%d")
+                
+                # Exclude today from historical average to avoid skewing with incomplete data
+                if date_str == now.strftime("%Y-%m-%d"):
+                    continue
+                    
+                weekday_stats[weekday]["total_seconds"] += duration
+                weekday_stats[weekday]["unique_days"].add(date_str)
+
+        # Map weekday index to period constant
+        weekday_map = {
+            0: PERIOD_MONDAY,
+            1: PERIOD_TUESDAY,
+            2: PERIOD_WEDNESDAY,
+            3: PERIOD_THURSDAY,
+            4: PERIOD_FRIDAY,
+            5: PERIOD_SATURDAY,
+            6: PERIOD_SUNDAY,
+        }
+        
+        results = {}
+        for i, stats in weekday_stats.items():
+            count = len(stats["unique_days"])
+            if count > 0:
+                avg_seconds = stats["total_seconds"] / count
+                results[weekday_map[i]] = round(avg_seconds / 3600, 2)
+            else:
+                results[weekday_map[i]] = 0.0
+                
+        LOGGER.debug("Calculated weekday averages for %s: %s", zone_name, results)
+        return results

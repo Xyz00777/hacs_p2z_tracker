@@ -20,6 +20,15 @@ PERIOD_TODAY = "today"
 PERIOD_WEEK = "week"
 PERIOD_MONTH = "month"
 
+# Weekday periods for averages
+PERIOD_MONDAY = "monday"
+PERIOD_TUESDAY = "tuesday"
+PERIOD_WEDNESDAY = "wednesday"
+PERIOD_THURSDAY = "thursday"
+PERIOD_FRIDAY = "friday"
+PERIOD_SATURDAY = "saturday"
+PERIOD_SUNDAY = "sunday"
+
 # Sensor attributes
 ATTR_ZONE_NAME = "zone_name"
 ATTR_PERSON_ENTITY = "person_entity"

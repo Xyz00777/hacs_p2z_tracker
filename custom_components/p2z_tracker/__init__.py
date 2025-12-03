@@ -78,7 +78,7 @@ async def _async_cleanup_orphaned_entities(
     entry: P2ZTrackerConfigEntry,
 ) -> None:
     """Remove entities that are no longer tracked."""
-    from homeassistant.helpers import entity_registry as er
+    from homeassistant.helpers import device_registry as dr, entity_registry as er
     from homeassistant.util import slugify
 
     from .const import (
@@ -116,3 +116,27 @@ async def _async_cleanup_orphaned_entities(
         if entity.unique_id not in expected_unique_ids:
             LOGGER.info("Removing orphaned entity: %s", entity.entity_id)
             entity_registry.async_remove(entity.entity_id)
+
+    # Cleanup orphaned devices
+    device_registry = dr.async_get(hass)
+    devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+    
+    # Generate set of expected device identifiers
+    expected_device_ids = set()
+    for zone_config in tracked_zones:
+        zone_name = zone_config[CONF_ZONE_NAME]
+        zone_slug = slugify(zone_name.replace("zone.", ""))
+        expected_device_ids.add((DOMAIN, f"{person_name}_{zone_slug}"))
+        
+    for device in devices:
+        # Check if device has any of our expected identifiers
+        # A device matches if ANY of its identifiers match our expected list
+        is_valid = False
+        for identifier in device.identifiers:
+            if identifier in expected_device_ids:
+                is_valid = True
+                break
+        
+        if not is_valid:
+            LOGGER.info("Removing orphaned device: %s", device.name)
+            device_registry.async_remove_device(device.id)

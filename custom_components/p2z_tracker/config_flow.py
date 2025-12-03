@@ -100,12 +100,12 @@ class P2ZTrackerOptionsFlow(config_entries.OptionsFlow):
         # Build menu options
         menu_options = ["add_zone"]
         if self._current_zones:
-            menu_options.append("remove_zone")
+            menu_options.extend(["edit_zone", "remove_zone"])
 
         # Show current zones
         zones_text = "\n".join(
             [
-                f"- {z.get(CONF_DISPLAY_NAME, z[CONF_ZONE_NAME])}"
+                f"- {z.get(CONF_DISPLAY_NAME) or z[CONF_ZONE_NAME]}"
                 for z in self._current_zones
             ]
         )
@@ -117,6 +117,119 @@ class P2ZTrackerOptionsFlow(config_entries.OptionsFlow):
             step_id="zone_menu",
             menu_options=menu_options,
             description_placeholders=description_placeholders,
+        )
+
+    async def async_step_edit_zone(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.ConfigFlowResult:
+        """Select a zone to edit."""
+        if user_input is not None:
+            return await self.async_step_configure_zone(user_input["zone_to_edit"])
+
+        # Build list of editable zones
+        zone_options = [
+            selector.SelectOptionDict(
+                value=z[CONF_ZONE_NAME],
+                label=z.get(CONF_DISPLAY_NAME) or z[CONF_ZONE_NAME],
+            )
+            for z in self._current_zones
+        ]
+
+        return self.async_show_form(
+            step_id="edit_zone",
+            data_schema=vol.Schema(
+                {
+                    vol.Required("zone_to_edit"): selector.SelectSelector(
+                        selector.SelectSelectorConfig(
+                            options=zone_options,
+                            mode=selector.SelectSelectorMode.DROPDOWN,
+                        )
+                    )
+                }
+            ),
+        )
+
+    async def async_step_configure_zone(
+        self, zone_name: str | dict[str, Any]
+    ) -> config_entries.ConfigFlowResult:
+        """Configure the selected zone."""
+        # Handle form submission
+        if isinstance(zone_name, dict):
+            user_input = zone_name
+            original_zone_name = user_input["original_zone_name"]
+            
+            # Find the zone to update
+            for i, zone in enumerate(self._current_zones):
+                if zone[CONF_ZONE_NAME] == original_zone_name:
+                    # Update zone config
+                    updated_zone = {
+                        CONF_ZONE_NAME: original_zone_name,
+                        CONF_DISPLAY_NAME: user_input.get(CONF_DISPLAY_NAME, ""),
+                        CONF_ENABLE_BACKFILL: user_input.get(CONF_ENABLE_BACKFILL, False),
+                        CONF_BACKFILL_DAYS: user_input.get(CONF_BACKFILL_DAYS, 0),
+                        CONF_RETENTION_DAYS: user_input.get(
+                            CONF_RETENTION_DAYS, DEFAULT_RETENTION_DAYS
+                        ),
+                        CONF_ENABLE_AVERAGES: user_input.get(CONF_ENABLE_AVERAGES, False),
+                    }
+                    self._current_zones[i] = updated_zone
+                    break
+            
+            return self.async_create_entry(
+                title="",
+                data={CONF_TRACKED_ZONES: self._current_zones},
+            )
+
+        # Handle initial call with zone_name string
+        # Find current config for this zone
+        current_config = next(
+            (z for z in self._current_zones if z[CONF_ZONE_NAME] == zone_name), None
+        )
+        
+        if not current_config:
+            return await self.async_step_zone_menu()
+
+        return self.async_show_form(
+            step_id="configure_zone",
+            data_schema=vol.Schema(
+                {
+                    vol.Required("original_zone_name", default=zone_name): str, # Hidden field to track ID
+                    vol.Optional(
+                        CONF_DISPLAY_NAME, 
+                        description={"suggested_value": current_config.get(CONF_DISPLAY_NAME, "")}
+                    ): str,
+                    vol.Optional(
+                        CONF_ENABLE_BACKFILL, 
+                        default=current_config.get(CONF_ENABLE_BACKFILL, False)
+                    ): selector.BooleanSelector(),
+                    vol.Optional(
+                        CONF_BACKFILL_DAYS, 
+                        default=current_config.get(CONF_BACKFILL_DAYS, 0)
+                    ): selector.NumberSelector(
+                        selector.NumberSelectorConfig(
+                            min=0,
+                            max=365,
+                            mode=selector.NumberSelectorMode.BOX,
+                            unit_of_measurement="days",
+                        ),
+                    ),
+                    vol.Optional(
+                        CONF_RETENTION_DAYS, 
+                        default=current_config.get(CONF_RETENTION_DAYS, DEFAULT_RETENTION_DAYS)
+                    ): selector.NumberSelector(
+                        selector.NumberSelectorConfig(
+                            min=0,
+                            max=3650,
+                            mode=selector.NumberSelectorMode.BOX,
+                            unit_of_measurement="days",
+                        ),
+                    ),
+                    vol.Optional(
+                        CONF_ENABLE_AVERAGES, 
+                        default=current_config.get(CONF_ENABLE_AVERAGES, False)
+                    ): selector.BooleanSelector(),
+                }
+            ),
         )
 
     async def async_step_add_zone(
@@ -222,7 +335,7 @@ class P2ZTrackerOptionsFlow(config_entries.OptionsFlow):
         zone_options = [
             selector.SelectOptionDict(
                 value=z[CONF_ZONE_NAME],
-                label=z.get(CONF_DISPLAY_NAME, z[CONF_ZONE_NAME]),
+                label=z.get(CONF_DISPLAY_NAME) or z[CONF_ZONE_NAME],
             )
             for z in self._current_zones
         ]

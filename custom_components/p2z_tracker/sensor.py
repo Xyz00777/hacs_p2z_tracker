@@ -31,6 +31,13 @@ from .const import (
     PERIOD_MONTH,
     PERIOD_TODAY,
     PERIOD_WEEK,
+    PERIOD_MONDAY,
+    PERIOD_TUESDAY,
+    PERIOD_WEDNESDAY,
+    PERIOD_THURSDAY,
+    PERIOD_FRIDAY,
+    PERIOD_SATURDAY,
+    PERIOD_SUNDAY,
 )
 from .coordinator import P2ZDataUpdateCoordinator
 
@@ -42,6 +49,15 @@ if TYPE_CHECKING:
 
 
 PERIODS = [PERIOD_TODAY, PERIOD_WEEK, PERIOD_MONTH]
+WEEKDAY_PERIODS = [
+    PERIOD_MONDAY,
+    PERIOD_TUESDAY,
+    PERIOD_WEDNESDAY,
+    PERIOD_THURSDAY,
+    PERIOD_FRIDAY,
+    PERIOD_SATURDAY,
+    PERIOD_SUNDAY,
+]
 
 
 async def async_setup_entry(
@@ -89,7 +105,7 @@ async def async_setup_entry(
         
         # Create average sensors if enabled
         if enable_averages:
-            for period in PERIODS:
+            for period in WEEKDAY_PERIODS:
                 sensors.append(
                     ZoneTimeSensor(
                         coordinator=coordinator,
@@ -182,6 +198,9 @@ class ZoneTimeSensor(CoordinatorEntity[P2ZDataUpdateCoordinator], SensorEntity):
                 # Days elapsed this month
                 days_elapsed = now.day
                 return round(total_hours / days_elapsed, 2) if days_elapsed > 0 else 0.0
+            elif self._period in WEEKDAY_PERIODS:
+                # Weekday averages are pre-calculated in coordinator
+                return total_hours
         
         return total_hours
 
