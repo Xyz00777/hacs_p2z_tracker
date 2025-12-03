@@ -115,9 +115,6 @@ utility_meter:
     cycle: weekly
 ```
 
-### After (This Integration):
-Just click **Add Integration** → Configure via UI! ✨
-
 ## Troubleshooting
 
 ### Sensors not updating
@@ -134,9 +131,21 @@ Just click **Add Integration** → Configure via UI! ✨
 - The person may not have been in the zone during the time period
 - Check if the zone name matches the person's state (e.g., `home` not `zone.home`)
 
+## About This Project
+
+> **Note**: This integration was created with AI assistance. As the maintainer, I don't have extensive Python or Home Assistant development experience, so I'm relying on AI tools to help build this integration. If you find issues or have suggestions for improvements, please don't hesitate to open an issue or submit a PR - your contributions are very welcome and appreciated! 🙏
+
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome and encouraged! Whether it's bug fixes, new features, code improvements, or documentation updates - all PRs are appreciated.
+
+If you'd like to contribute:
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a Pull Request
+
+I'm happy to review and merge community contributions!
 
 ## License
 
