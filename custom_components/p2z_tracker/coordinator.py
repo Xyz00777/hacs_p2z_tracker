@@ -157,6 +157,10 @@ class P2ZDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, float]]
         for i, state in enumerate(person_states):
             current_state = state.state
             current_time = state.last_updated
+            
+            # Ensure we don't count time before the start_time
+            if current_time < start_time:
+                current_time = start_time
 
             # Check if person is in the target zone
             if current_state == target_zone:
@@ -167,6 +171,10 @@ class P2ZDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, float]]
                 # Not in zone anymore or different zone
                 if last_zone_entry is not None:
                     # Calculate duration
+                    # Ensure we don't count time after end_time (though unlikely with history)
+                    if current_time > end_time:
+                        current_time = end_time
+                        
                     duration = (current_time - last_zone_entry).total_seconds()
                     total_seconds += duration
                     last_zone_entry = None
