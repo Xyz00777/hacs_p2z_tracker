@@ -75,8 +75,8 @@ class P2ZTrackerOptionsFlow(config_entries.OptionsFlow):
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
-        self._current_zones: list[dict[str, Any]] = config_entry.options.get(
-            CONF_TRACKED_ZONES, []
+        self._current_zones: list[dict[str, Any]] = list(
+            config_entry.options.get(CONF_TRACKED_ZONES, [])
         )
 
     async def async_step_init(
@@ -95,14 +95,11 @@ class P2ZTrackerOptionsFlow(config_entries.OptionsFlow):
                 return await self.async_step_add_zone()
             elif action == "remove_zone" and self._current_zones:
                 return await self.async_step_remove_zone()
-            elif action == "done":
-                return self.async_create_entry(title="", data={})
 
         # Build menu options
         menu_options = ["add_zone"]
         if self._current_zones:
             menu_options.append("remove_zone")
-        menu_options.append("done")
 
         # Show current zones
         zones_text = "\n".join(
@@ -145,6 +142,12 @@ class P2ZTrackerOptionsFlow(config_entries.OptionsFlow):
                     ),
                 }
                 self._current_zones.append(new_zone)
+                
+                LOGGER.info(
+                    "Added zone %s to tracking. Total zones: %d",
+                    zone_name,
+                    len(self._current_zones),
+                )
 
                 # Save and return to menu
                 return self.async_create_entry(

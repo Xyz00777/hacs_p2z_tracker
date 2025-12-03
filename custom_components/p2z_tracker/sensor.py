@@ -53,12 +53,23 @@ async def async_setup_entry(
     person_entity = entry.data[CONF_PERSON_ENTITY]
     tracked_zones = entry.options.get(CONF_TRACKED_ZONES, [])
 
+    from .const import LOGGER
+    LOGGER.info(
+        "Setting up sensors for person %s with %d tracked zones",
+        person_entity,
+        len(tracked_zones),
+    )
+
     # Create 3 sensors per tracked zone (today, week, month)
     sensors = []
     for zone_config in tracked_zones:
         zone_name = zone_config[CONF_ZONE_NAME]
-        display_name = zone_config.get(CONF_DISPLAY_NAME, zone_name)
+        display_name = zone_config.get(CONF_DISPLAY_NAME)
+        if not display_name:
+            display_name = zone_name
         backfilled = zone_config.get(CONF_ENABLE_BACKFILL, False)
+
+        LOGGER.debug("Creating sensors for zone: %s", zone_name)
 
         for period in PERIODS:
             sensors.append(
@@ -72,6 +83,7 @@ async def async_setup_entry(
                 )
             )
 
+    LOGGER.info("Adding %d sensors to Home Assistant", len(sensors))
     async_add_entities(sensors)
 
 

@@ -58,7 +58,16 @@ class P2ZDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, float]]
         zone_data = {}
         for zone_config in tracked_zones:
             zone_name = zone_config[CONF_ZONE_NAME]
-            zone_data[zone_name] = await self._calculate_zone_times(zone_name)
+            try:
+                zone_data[zone_name] = await self._calculate_zone_times(zone_name)
+            except Exception as err:  # pylint: disable=broad-except
+                LOGGER.error("Error calculating time for zone %s: %s", zone_name, err)
+                # Return 0 values on error to keep sensor available
+                zone_data[zone_name] = {
+                    PERIOD_TODAY: 0.0,
+                    PERIOD_WEEK: 0.0,
+                    PERIOD_MONTH: 0.0,
+                }
 
         return zone_data
 

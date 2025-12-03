@@ -23,8 +23,7 @@
                 "description": "**Currently Tracked Zones:**\n\n{current_zones}",
                 "menu_options": {
                     "add_zone": "Add new zone to track",
-                    "remove_zone": "Remove tracked zone",
-                    "done": "Finish"
+                    "remove_zone": "Remove tracked zone"
                 }
             },
             "add_zone": {
