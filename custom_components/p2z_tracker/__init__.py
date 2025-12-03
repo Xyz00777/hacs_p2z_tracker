@@ -48,6 +48,9 @@ async def async_setup_entry(
     # https://developers.home-assistant.io/docs/integration_fetching_data#coordinated-single-api-poll-for-data-for-all-entities
     await coordinator.async_config_entry_first_refresh()
 
+    # Cleanup orphaned entities
+    await _async_cleanup_orphaned_entities(hass, entry)
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
@@ -68,3 +71,48 @@ async def async_reload_entry(
 ) -> None:
     """Reload config entry."""
     await hass.config_entries.async_reload(entry.entry_id)
+
+
+async def _async_cleanup_orphaned_entities(
+    hass: HomeAssistant,
+    entry: P2ZTrackerConfigEntry,
+) -> None:
+    """Remove entities that are no longer tracked."""
+    from homeassistant.helpers import entity_registry as er
+    from homeassistant.util import slugify
+
+    from .const import (
+        CONF_PERSON_ENTITY,
+        CONF_TRACKED_ZONES,
+        CONF_ZONE_NAME,
+        PERIOD_MONTH,
+        PERIOD_TODAY,
+        PERIOD_WEEK,
+    )
+
+    entity_registry = er.async_get(hass)
+    tracked_zones = entry.options.get(CONF_TRACKED_ZONES, [])
+    person_entity = entry.data[CONF_PERSON_ENTITY]
+    person_name = person_entity.replace("person.", "")
+    periods = [PERIOD_TODAY, PERIOD_WEEK, PERIOD_MONTH]
+
+    # Generate set of expected unique IDs
+    expected_unique_ids = set()
+    for zone_config in tracked_zones:
+        zone_name = zone_config[CONF_ZONE_NAME]
+        zone_slug = slugify(zone_name.replace("zone.", ""))
+        for period in periods:
+            expected_unique_ids.add(f"p2z_{person_name}_{zone_slug}_{period}")
+
+    # Find and remove entities that are not in expected list
+    entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    LOGGER.debug(
+        "Checking cleanup: Found %d existing entities, expected %d unique IDs", 
+        len(entries), 
+        len(expected_unique_ids)
+    )
+    
+    for entity in entries:
+        if entity.unique_id not in expected_unique_ids:
+            LOGGER.info("Removing orphaned entity: %s", entity.entity_id)
+            entity_registry.async_remove(entity.entity_id)

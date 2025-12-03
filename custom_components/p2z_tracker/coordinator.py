@@ -117,19 +117,36 @@ class P2ZDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, float]]
         """Calculate time spent in a specific zone between two times."""
         # Get state history for the person entity
         states = await get_instance(self.hass).async_add_executor_job(
-            history.state_changes_during_period,
+            history.get_significant_states,
             self.hass,
             start_time,
             end_time,
-            self._person_entity,
+            [self._person_entity],
+            None,
+            True,  # include_start_time_state
+            True,  # significant_changes_only
         )
 
-        if not states or self._person_entity not in states:
+        if not states:
+            LOGGER.debug("No history states found for %s", self._person_entity)
+            return 0.0
+            
+        if self._person_entity not in states:
+            LOGGER.debug("Person entity %s not in history states", self._person_entity)
             return 0.0
 
         person_states = states[self._person_entity]
         if not person_states:
+            LOGGER.debug("Empty state list for %s", self._person_entity)
             return 0.0
+            
+        LOGGER.debug(
+            "Found %d states for %s between %s and %s", 
+            len(person_states), 
+            self._person_entity,
+            start_time,
+            end_time
+        )
 
         # Extract zone name from entity_id (zone.home -> home)
         target_zone = zone_entity_id.replace("zone.", "")
