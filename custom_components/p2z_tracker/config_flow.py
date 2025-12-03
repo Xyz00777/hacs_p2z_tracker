@@ -12,6 +12,7 @@ from homeassistant.helpers import entity_registry as er, selector
 from .const import (
     CONF_BACKFILL_DAYS,
     CONF_DISPLAY_NAME,
+    CONF_ENABLE_AVERAGES,
     CONF_ENABLE_BACKFILL,
     CONF_PERSON_ENTITY,
     CONF_RETENTION_DAYS,
