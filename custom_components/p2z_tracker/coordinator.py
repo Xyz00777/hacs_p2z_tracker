@@ -149,8 +149,17 @@ class P2ZDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, float]]
             zone_entity_id
         )
 
-        # Extract zone name from entity_id (zone.home -> home)
+        # Extract zone name from entity_id (zone.ccc_ffm -> ccc_ffm)
         target_zone = zone_entity_id.replace("zone.", "")
+        
+        # Log first few states to see what we're working with
+        if len(person_states) > 0:
+            sample_states = [s.state for s in person_states[:5]]
+            LOGGER.info(
+                "Target zone: '%s', Sample person states: %s",
+                target_zone,
+                sample_states
+            )
 
         total_seconds = 0.0
         last_zone_entry = None
