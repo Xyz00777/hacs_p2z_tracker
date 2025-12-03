@@ -36,6 +36,25 @@
 2. Extract the `p2z_tracker` folder to your `custom_components` directory
 3. Restart Home Assistant
 
+### Building from Source
+
+To create a ZIP file for manual upload:
+
+**Normal Linux**:
+```bash
+./scripts/build.sh
+# Creates build/p2z_tracker-{version}.zip
+```
+
+**NixOS**:
+```bash
+./scripts/build-nixos.sh
+# Automatically sets up nix-shell with zip and dependencies
+# Creates build/p2z_tracker-{version}.zip
+```
+
+Then upload the ZIP file to your Home Assistant instance and extract it to `custom_components/`.
+
 ## Configuration
 
 ### Initial Setup
