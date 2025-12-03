@@ -12,5 +12,5 @@
   "integration_type": "service",
   "iot_class": "calculated",
   "issue_tracker": "https://github.com/xyz00777/hacs_p2z_tracker/issues",
-  "version": "0.1.2"
+  "version": "0.1.4"
 }

@@ -44,6 +44,7 @@ class P2ZDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, float]]
         self.config_entry = config_entry
         self._person_entity = config_entry.data[CONF_PERSON_ENTITY]
         self._backfilled = False
+        self.last_update_success_time: datetime | None = None
 
     async def _async_update_data(self) -> dict[str, dict[str, float]]:
         """Fetch zone time data from recorder."""
@@ -69,6 +70,7 @@ class P2ZDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, float]]
                     PERIOD_MONTH: 0.0,
                 }
 
+        self.last_update_success_time = dt_util.now()
         return zone_data
 
     async def _perform_backfill(self, tracked_zones: list[dict[str, Any]]) -> None:
