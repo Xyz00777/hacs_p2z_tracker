@@ -156,8 +156,8 @@ class P2ZDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, float]]
             LOGGER.warning("Zone entity %s not found", zone_entity_id)
             return 0.0
             
-        # The zone's state IS its friendly name
-        target_zone = zone_state.state
+        # The zone's friendly name is in the attributes
+        target_zone = zone_state.attributes.get("friendly_name", zone_entity_id.replace("zone.", ""))
         
         # Log first few states to see what we're working with
         if len(person_states) > 0:

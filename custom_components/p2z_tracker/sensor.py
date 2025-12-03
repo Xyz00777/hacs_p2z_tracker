@@ -122,10 +122,10 @@ class ZoneTimeSensor(CoordinatorEntity[P2ZDataUpdateCoordinator], SensorEntity):
         period_label = period.capitalize()
         self._attr_name = f"Time at {display_name} {period_label}"
 
-        # Set device info to group all sensors under one device
+        # Set device info to group sensors for this zone under one device
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{person_entity}_zone_tracker")},
-            name=f"Zone Tracker: {person_entity.replace('person.', '').replace('_', ' ').title()}",
+            identifiers={(DOMAIN, f"{person_entity}_{zone_slug}")},
+            name=f"{display_name} Tracking",
             manufacturer="Person Zone Time Tracker",
             model="Zone Time Tracking",
             entry_type=None,
