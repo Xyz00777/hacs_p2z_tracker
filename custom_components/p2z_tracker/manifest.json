@@ -1,0 +1,14 @@
+{
+  "domain": "p2z_tracker",
+  "name": "Person Zone Time Tracker",
+  "codeowners": [
+    "@xyz00777"
+  ],
+  "config_flow": true,
+  "dependencies": ["history"],
+  "documentation": "https://github.com/xyz00777/hacs_p2z_tracker",
+  "integration_type": "helper",
+  "iot_class": "calculated",
+  "issue_tracker": "https://github.com/xyz00777/hacs_p2z_tracker/issues",
+  "version": "0.1.0"
+}
