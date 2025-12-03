@@ -140,6 +140,7 @@ class P2ZTrackerOptionsFlow(config_entries.OptionsFlow):
                     CONF_RETENTION_DAYS: user_input.get(
                         CONF_RETENTION_DAYS, DEFAULT_RETENTION_DAYS
                     ),
+                    CONF_ENABLE_AVERAGES: user_input.get(CONF_ENABLE_AVERAGES, False),
                 }
                 self._current_zones.append(new_zone)
                 
@@ -184,8 +185,7 @@ class P2ZTrackerOptionsFlow(config_entries.OptionsFlow):
                             unit_of_measurement="days",
                         ),
                     ),
-                    vol.Optional(
-                        CONF_RETENTION_DAYS, default=DEFAULT_RETENTION_DAYS
+                    vol.Optional(\n                        CONF_RETENTION_DAYS, default=DEFAULT_RETENTION_DAYS
                     ): selector.NumberSelector(
                         selector.NumberSelectorConfig(
                             min=0,
@@ -194,6 +194,7 @@ class P2ZTrackerOptionsFlow(config_entries.OptionsFlow):
                             unit_of_measurement="days",
                         ),
                     ),
+                    vol.Optional(CONF_ENABLE_AVERAGES, default=False): selector.BooleanSelector(),
                 },
             ),
             errors=errors,

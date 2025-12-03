@@ -13,6 +13,7 @@ CONF_DISPLAY_NAME = "display_name"
 CONF_ENABLE_BACKFILL = "enable_backfill"
 CONF_BACKFILL_DAYS = "backfill_days"
 CONF_RETENTION_DAYS = "retention_days"
+CONF_ENABLE_AVERAGES = "enable_averages"
 
 # Time periods
 PERIOD_TODAY = "today"

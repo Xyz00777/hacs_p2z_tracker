@@ -34,7 +34,8 @@
                     "display_name": "Zone Label (e.g. 'Home' for 'Time at Home')",
                     "enable_backfill": "Enable Historical Backfill",
                     "backfill_days": "Days to Backfill",
-                    "retention_days": "Data Retention Period (0 = Unlimited)"
+                    "retention_days": "Data Retention Period (0 = Unlimited)",
+                    "enable_averages": "Enable Daily Average Sensors"
                 }
             },
             "remove_zone": {

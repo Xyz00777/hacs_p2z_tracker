@@ -22,6 +22,7 @@ from .const import (
     ATTR_PERSON_ENTITY,
     ATTR_ZONE_NAME,
     CONF_DISPLAY_NAME,
+    CONF_ENABLE_AVERAGES,
     CONF_ENABLE_BACKFILL,
     CONF_PERSON_ENTITY,
     CONF_TRACKED_ZONES,
@@ -60,7 +61,7 @@ async def async_setup_entry(
         len(tracked_zones),
     )
 
-    # Create 3 sensors per tracked zone (today, week, month)
+    # Create sensors for each tracked zone
     sensors = []
     for zone_config in tracked_zones:
         zone_name = zone_config[CONF_ZONE_NAME]
@@ -68,9 +69,11 @@ async def async_setup_entry(
         if not display_name:
             display_name = zone_name
         backfilled = zone_config.get(CONF_ENABLE_BACKFILL, False)
+        enable_averages = zone_config.get(CONF_ENABLE_AVERAGES, False)
 
         LOGGER.debug("Creating sensors for zone: %s", zone_name)
 
+        # Create standard sensors (today, week, month)
         for period in PERIODS:
             sensors.append(
                 ZoneTimeSensor(
@@ -80,8 +83,24 @@ async def async_setup_entry(
                     display_name=display_name,
                     period=period,
                     backfilled=backfilled,
+                    is_average=False,
                 )
             )
+        
+        # Create average sensors if enabled
+        if enable_averages:
+            for period in PERIODS:
+                sensors.append(
+                    ZoneTimeSensor(
+                        coordinator=coordinator,
+                        person_entity=person_entity,
+                        zone_entity_id=zone_name,
+                        display_name=display_name,
+                        period=period,
+                        backfilled=backfilled,
+                        is_average=True,
+                    )
+                )
 
     LOGGER.info("Adding %d sensors to Home Assistant", len(sensors))
     async_add_entities(sensors)
@@ -102,6 +121,7 @@ class ZoneTimeSensor(CoordinatorEntity[P2ZDataUpdateCoordinator], SensorEntity):
         display_name: str,
         period: str,
         backfilled: bool,
+        is_average: bool = False,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
@@ -111,16 +131,19 @@ class ZoneTimeSensor(CoordinatorEntity[P2ZDataUpdateCoordinator], SensorEntity):
         self._display_name = display_name
         self._period = period
         self._backfilled = backfilled
+        self._is_average = is_average
 
         # Generate entity ID
         person_name = person_entity.replace("person.", "")
         zone_slug = slugify(zone_entity_id.replace("zone.", ""))
-        self._attr_unique_id = f"p2z_{person_name}_{zone_slug}_{period}"
-        self.entity_id = f"sensor.p2z_{person_name}_{zone_slug}_{period}"
+        avg_suffix = "_avg" if is_average else ""
+        self._attr_unique_id = f"p2z_{person_name}_{zone_slug}_{period}{avg_suffix}"
+        self.entity_id = f"sensor.p2z_{person_name}_{zone_slug}_{period}{avg_suffix}"
 
         # Set name
         period_label = period.capitalize()
-        self._attr_name = f"Time at {display_name} {period_label}"
+        avg_label = " (Avg/Day)" if is_average else ""
+        self._attr_name = f"Time at {display_name} {period_label}{avg_label}"
 
         # Set device info to group sensors for this zone under one device
         self._attr_device_info = DeviceInfo(
@@ -141,7 +164,26 @@ class ZoneTimeSensor(CoordinatorEntity[P2ZDataUpdateCoordinator], SensorEntity):
         if not zone_data:
             return None
 
-        return zone_data.get(self._period, 0.0)
+        total_hours = zone_data.get(self._period, 0.0)
+        
+        # If this is an average sensor, calculate daily average
+        if self._is_average:
+            from homeassistant.util import dt as dt_util
+            now = dt_util.now()
+            
+            if self._period == PERIOD_TODAY:
+                # Today average is just the total (1 day)
+                return total_hours
+            elif self._period == PERIOD_WEEK:
+                # Days elapsed this week (Monday = 0)
+                days_elapsed = now.weekday() + 1
+                return round(total_hours / days_elapsed, 2) if days_elapsed > 0 else 0.0
+            elif self._period == PERIOD_MONTH:
+                # Days elapsed this month
+                days_elapsed = now.day
+                return round(total_hours / days_elapsed, 2) if days_elapsed > 0 else 0.0
+        
+        return total_hours
 
     @property
     def extra_state_attributes(self) -> dict[str, str]:
