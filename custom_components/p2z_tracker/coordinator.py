@@ -149,15 +149,23 @@ class P2ZDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, float]]
             zone_entity_id
         )
 
-        # Extract zone name from entity_id (zone.ccc_ffm -> ccc_ffm)
-        target_zone = zone_entity_id.replace("zone.", "")
+        # Get the zone's friendly name from the zone entity
+        # Person entities use the zone's friendly name, not the entity_id
+        zone_state = self.hass.states.get(zone_entity_id)
+        if zone_state is None:
+            LOGGER.warning("Zone entity %s not found", zone_entity_id)
+            return 0.0
+            
+        # The zone's state IS its friendly name
+        target_zone = zone_state.state
         
         # Log first few states to see what we're working with
         if len(person_states) > 0:
             sample_states = [s.state for s in person_states[:5]]
             LOGGER.info(
-                "Target zone: '%s', Sample person states: %s",
+                "Target zone: '%s' (from %s), Sample person states: %s",
                 target_zone,
+                zone_entity_id,
                 sample_states
             )
 
