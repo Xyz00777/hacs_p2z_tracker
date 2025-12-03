@@ -1,0 +1,173 @@
+# ApexCharts Card Examples for Person Zone Time Tracker
+# Replace entity names with your actual sensor entities
+
+# Example 1: Weekly Comparison Chart
+# Shows daily time for current week vs last week with average line
+type: custom:apexcharts-card
+header:
+  show: true
+  title: Time at Work - Weekly View
+  show_states: true
+  colorize_states: true
+graph_span: 7d
+span:
+  start: week
+series:
+  # Current week - daily columns
+  - entity: sensor.p2z_xyz00777_work_today  # Replace with your sensor
+    name: This Week
+    type: column
+    color: '#ff9800'
+    group_by:
+      func: max
+      duration: 1d
+    show:
+      datalabels: true
+  
+  # Last week - daily columns (semi-transparent)
+  - entity: sensor.p2z_xyz00777_work_today  # Replace with your sensor
+    name: Last Week
+    type: column
+    color: '#2196f3'
+    opacity: 0.3
+    offset: '-7d'
+    group_by:
+      func: max
+      duration: 1d
+    show:
+      datalabels: false
+  
+  # Average line
+  - entity: sensor.p2z_xyz00777_work_today  # Replace with your sensor
+    name: Average
+    type: line
+    color: red
+    stroke_width: 2
+    curve: smooth
+    group_by:
+      func: avg
+      duration: 1d
+    show:
+      datalabels: false
+
+---
+# Example 2: Multi-Zone Dashboard Card
+# Shows multiple zones with weekly and monthly totals
+type: custom:apexcharts-card
+header:
+  show: true
+  title: CCC-FFM Zone Tracking
+  show_states: true
+  colorize_states: true
+graph_span: 7d
+span:
+  start: week
+series:
+  # Weekly total in header
+  - entity: sensor.p2z_xyz00777_ccc_ffm_week  # Replace with your sensor
+    name: This Week
+    color: '#ff9800'
+    show:
+      in_header: true
+      in_chart: false
+  
+  # Monthly total in header
+  - entity: sensor.p2z_xyz00777_ccc_ffm_month  # Replace with your sensor
+    name: This Month
+    color: '#4caf50'
+    show:
+      in_header: true
+      in_chart: false
+  
+  # Daily breakdown - current week
+  - entity: sensor.p2z_xyz00777_ccc_ffm_today  # Replace with your sensor
+    name: Daily
+    type: column
+    color: '#ff9800'
+    group_by:
+      func: max
+      duration: 1d
+    show:
+      in_header: false
+      in_chart: true
+      datalabels: true
+  
+  # Daily breakdown - last week (for comparison)
+  - entity: sensor.p2z_xyz00777_ccc_ffm_today  # Replace with your sensor
+    name: Last Week
+    type: column
+    color: '#2196f3'
+    opacity: 0.3
+    offset: '-7d'
+    group_by:
+      func: max
+      duration: 1d
+    show:
+      in_header: false
+      in_chart: true
+      datalabels: false
+
+---
+# Example 3: Monthly Overview
+# Shows the entire month with daily breakdown
+type: custom:apexcharts-card
+header:
+  show: true
+  title: Monthly Time Tracking
+  show_states: true
+  colorize_states: true
+graph_span: 1month
+span:
+  start: month
+series:
+  # Monthly total
+  - entity: sensor.p2z_xyz00777_work_month  # Replace with your sensor
+    name: Total This Month
+    color: '#4caf50'
+    show:
+      in_header: true
+      in_chart: false
+  
+  # Daily columns for entire month
+  - entity: sensor.p2z_xyz00777_work_today  # Replace with your sensor
+    name: Daily
+    type: column
+    color: '#4caf50'
+    group_by:
+      func: max
+      duration: 1d
+    show:
+      datalabels: false
+
+---
+# Example 4: Simple Entity Card
+# Shows current week total with trend
+type: entity
+entity: sensor.p2z_xyz00777_work_week  # Replace with your sensor
+name: Time at Work This Week
+icon: mdi:briefcase-clock
+
+---
+# Example 5: Multiple Zones Grid
+type: grid
+columns: 2
+cards:
+  - type: entity
+    entity: sensor.p2z_xyz00777_work_week  # Replace
+    name: Work (Week)
+    icon: mdi:briefcase
+  
+  - type: entity
+    entity: sensor.p2z_xyz00777_gym_week  # Replace
+    name: Gym (Week)
+    icon: mdi:dumbbell
+  
+  - type: entity
+    entity: sensor.p2z_xyz00777_work_month  # Replace
+    name: Work (Month)
+    icon: mdi:briefcase
+  
+  - type: entity
+    entity: sensor.p2z_xyz00777_gym_month  # Replace
+    name: Gym (Month)
+    icon: mdi:dumbbell
