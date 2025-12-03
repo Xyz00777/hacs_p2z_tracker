@@ -128,24 +128,25 @@ class P2ZDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, float]]
         )
 
         if not states:
-            LOGGER.debug("No history states found for %s", self._person_entity)
+            LOGGER.info("No history states found for %s", self._person_entity)
             return 0.0
             
         if self._person_entity not in states:
-            LOGGER.debug("Person entity %s not in history states", self._person_entity)
+            LOGGER.info("Person entity %s not in history states", self._person_entity)
             return 0.0
 
         person_states = states[self._person_entity]
         if not person_states:
-            LOGGER.debug("Empty state list for %s", self._person_entity)
+            LOGGER.info("Empty state list for %s", self._person_entity)
             return 0.0
             
-        LOGGER.debug(
-            "Found %d states for %s between %s and %s", 
+        LOGGER.info(
+            "Found %d states for %s between %s and %s (zone=%s)", 
             len(person_states), 
             self._person_entity,
             start_time,
-            end_time
+            end_time,
+            zone_entity_id
         )
 
         # Extract zone name from entity_id (zone.home -> home)
@@ -185,7 +186,16 @@ class P2ZDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, float]]
             total_seconds += duration
 
         # Convert seconds to hours
-        return round(total_seconds / 3600, 2)
+        hours = round(total_seconds / 3600, 2)
+        LOGGER.info(
+            "Calculated %.2f hours for %s in zone %s (period: %s to %s)",
+            hours,
+            self._person_entity,
+            zone_entity_id,
+            start_time,
+            end_time
+        )
+        return hours
 
     def _get_week_start(self, dt: datetime) -> datetime:
         """Get the start of the week (Monday at 00:00)."""
