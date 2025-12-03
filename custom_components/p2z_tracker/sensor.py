@@ -29,12 +29,12 @@ from .const import (
     PERIOD_TODAY,
     PERIOD_WEEK,
 )
+from .coordinator import P2ZDataUpdateCoordinator
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-    from .coordinator import P2ZDataUpdateCoordinator
     from .data import P2ZTrackerConfigEntry
 
 
