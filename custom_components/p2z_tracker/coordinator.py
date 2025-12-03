@@ -12,6 +12,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_BACKFILL_DAYS,
+    CONF_ENABLE_AVERAGES,
     CONF_ENABLE_BACKFILL,
     CONF_PERSON_ENTITY,
     CONF_TRACKED_ZONES,
