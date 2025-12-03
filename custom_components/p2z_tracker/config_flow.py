@@ -185,7 +185,8 @@ class P2ZTrackerOptionsFlow(config_entries.OptionsFlow):
                             unit_of_measurement="days",
                         ),
                     ),
-                    vol.Optional(\n                        CONF_RETENTION_DAYS, default=DEFAULT_RETENTION_DAYS
+                    vol.Optional(
+                        CONF_RETENTION_DAYS, default=DEFAULT_RETENTION_DAYS
                     ): selector.NumberSelector(
                         selector.NumberSelectorConfig(
                             min=0,
