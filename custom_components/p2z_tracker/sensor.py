@@ -156,10 +156,28 @@ class ZoneTimeSensor(CoordinatorEntity[P2ZDataUpdateCoordinator], SensorEntity):
         self._attr_unique_id = f"p2z_{person_name}_{zone_slug}_{period}{avg_suffix}"
         self.entity_id = f"sensor.p2z_{person_name}_{zone_slug}_{period}{avg_suffix}"
 
-        # Set name
-        period_label = period.capitalize()
-        avg_label = " (Avg/Day)" if is_average else ""
-        self._attr_name = f"Time at {display_name} {period_label}{avg_label}"
+        # Format period name for display
+        period_name = self._period.replace("_", " ").title()
+        
+        # Add numbering for weekday averages to ensure correct sorting
+        if self._period == PERIOD_MONDAY:
+            period_name = "1. Monday Avg"
+        elif self._period == PERIOD_TUESDAY:
+            period_name = "2. Tuesday Avg"
+        elif self._period == PERIOD_WEDNESDAY:
+            period_name = "3. Wednesday Avg"
+        elif self._period == PERIOD_THURSDAY:
+            period_name = "4. Thursday Avg"
+        elif self._period == PERIOD_FRIDAY:
+            period_name = "5. Friday Avg"
+        elif self._period == PERIOD_SATURDAY:
+            period_name = "6. Saturday Avg"
+        elif self._period == PERIOD_SUNDAY:
+            period_name = "7. Sunday Avg"
+        elif self._is_average:
+            period_name = f"{period_name} Avg"
+
+        self._attr_name = f"{self._display_name} {period_name}"
 
         # Set device info to group sensors for this zone under one device
         self._attr_device_info = DeviceInfo(
