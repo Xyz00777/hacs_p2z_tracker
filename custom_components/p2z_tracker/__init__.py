@@ -138,5 +138,10 @@ async def _async_cleanup_orphaned_entities(
                 break
         
         if not is_valid:
-            LOGGER.info("Removing orphaned device: %s", device.name)
+            LOGGER.info(
+                "Removing orphaned device: %s (identifiers: %s, expected: %s)", 
+                device.name, 
+                device.identifiers,
+                expected_device_ids
+            )
             device_registry.async_remove_device(device.id)
