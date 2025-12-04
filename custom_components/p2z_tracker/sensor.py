@@ -71,6 +71,7 @@ async def async_setup_entry(
     tracked_zones = entry.options.get(CONF_TRACKED_ZONES, [])
 
     from .const import LOGGER
+
     LOGGER.info(
         "Setting up sensors for person %s with %d tracked zones",
         person_entity,
@@ -102,7 +103,7 @@ async def async_setup_entry(
                     is_average=False,
                 )
             )
-        
+
         # Create average sensors if enabled
         if enable_averages:
             for period in WEEKDAY_PERIODS:
@@ -158,7 +159,7 @@ class ZoneTimeSensor(CoordinatorEntity[P2ZDataUpdateCoordinator], SensorEntity):
 
         # Format period name for display
         period_name = self._period.replace("_", " ").title()
-        
+
         if self._period in WEEKDAY_PERIODS:
             period_name = f"{period_name} Average"
         elif self._is_average:
@@ -186,12 +187,13 @@ class ZoneTimeSensor(CoordinatorEntity[P2ZDataUpdateCoordinator], SensorEntity):
             return None
 
         total_hours = zone_data.get(self._period, 0.0)
-        
+
         # If this is an average sensor, calculate daily average
         if self._is_average:
             from homeassistant.util import dt as dt_util
+
             now = dt_util.now()
-            
+
             if self._period == PERIOD_TODAY:
                 # Today average is just the total (1 day)
                 return total_hours
@@ -206,7 +208,7 @@ class ZoneTimeSensor(CoordinatorEntity[P2ZDataUpdateCoordinator], SensorEntity):
             elif self._period in WEEKDAY_PERIODS:
                 # Weekday averages are pre-calculated in coordinator
                 return total_hours
-        
+
         return total_hours
 
     @property

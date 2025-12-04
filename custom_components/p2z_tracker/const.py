@@ -1,4 +1,5 @@
 """Constants for p2z_tracker."""
+
 from logging import Logger, getLogger
 
 LOGGER: Logger = getLogger(__package__)
