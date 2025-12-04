@@ -116,7 +116,6 @@ class P2ZTrackerOptionsFlow(config_entries.OptionsFlow):
         return self.async_show_menu(
             step_id="zone_menu",
             menu_options=menu_options,
-            description_placeholders=description_placeholders,
         )
 
     async def async_step_edit_zone(
