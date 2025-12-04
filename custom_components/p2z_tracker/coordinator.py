@@ -285,9 +285,11 @@ class P2ZDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, float]]
         )
 
         if not states or self._person_entity not in states:
+            LOGGER.info("No history found for %s when calculating averages", self._person_entity)
             return {}
 
         person_states = states[self._person_entity]
+        LOGGER.info("Found %d states for averages calculation (target zone: %s)", len(person_states), target_zone)
         
         # Buckets for each weekday (0=Monday, 6=Sunday)
         # total_seconds: sum of duration
@@ -309,6 +311,8 @@ class P2ZDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, float]]
                     
                 weekday_stats[weekday]["total_seconds"] += duration
                 weekday_stats[weekday]["unique_days"].add(date_str)
+
+        LOGGER.info("Weekday stats raw data: %s", weekday_stats)
 
         # Map weekday index to period constant
         weekday_map = {
