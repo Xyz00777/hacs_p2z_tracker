@@ -6,7 +6,6 @@ from typing import Any
 
 import voluptuous as vol
 from homeassistant import config_entries
-from homeassistant.components import zone
 from homeassistant.helpers import entity_registry as er, selector
 
 from .const import (
@@ -157,7 +156,7 @@ class P2ZTrackerOptionsFlow(config_entries.OptionsFlow):
         if isinstance(zone_name, dict):
             user_input = zone_name
             original_zone_name = user_input["original_zone_name"]
-            
+
             # Find the zone to update
             for i, zone in enumerate(self._current_zones):
                 if zone[CONF_ZONE_NAME] == original_zone_name:
@@ -165,16 +164,20 @@ class P2ZTrackerOptionsFlow(config_entries.OptionsFlow):
                     updated_zone = {
                         CONF_ZONE_NAME: original_zone_name,
                         CONF_DISPLAY_NAME: user_input.get(CONF_DISPLAY_NAME, ""),
-                        CONF_ENABLE_BACKFILL: user_input.get(CONF_ENABLE_BACKFILL, False),
+                        CONF_ENABLE_BACKFILL: user_input.get(
+                            CONF_ENABLE_BACKFILL, False
+                        ),
                         CONF_BACKFILL_DAYS: user_input.get(CONF_BACKFILL_DAYS, 0),
                         CONF_RETENTION_DAYS: user_input.get(
                             CONF_RETENTION_DAYS, DEFAULT_RETENTION_DAYS
                         ),
-                        CONF_ENABLE_AVERAGES: user_input.get(CONF_ENABLE_AVERAGES, False),
+                        CONF_ENABLE_AVERAGES: user_input.get(
+                            CONF_ENABLE_AVERAGES, False
+                        ),
                     }
                     self._current_zones[i] = updated_zone
                     break
-            
+
             return self.async_create_entry(
                 title="",
                 data={CONF_TRACKED_ZONES: self._current_zones},
@@ -185,7 +188,7 @@ class P2ZTrackerOptionsFlow(config_entries.OptionsFlow):
         current_config = next(
             (z for z in self._current_zones if z[CONF_ZONE_NAME] == zone_name), None
         )
-        
+
         if not current_config:
             return await self.async_step_zone_menu()
 
@@ -193,18 +196,22 @@ class P2ZTrackerOptionsFlow(config_entries.OptionsFlow):
             step_id="configure_zone",
             data_schema=vol.Schema(
                 {
-                    vol.Required("original_zone_name", default=zone_name): str, # Hidden field to track ID
+                    vol.Required(
+                        "original_zone_name", default=zone_name
+                    ): str,  # Hidden field to track ID
                     vol.Optional(
-                        CONF_DISPLAY_NAME, 
-                        description={"suggested_value": current_config.get(CONF_DISPLAY_NAME, "")}
+                        CONF_DISPLAY_NAME,
+                        description={
+                            "suggested_value": current_config.get(CONF_DISPLAY_NAME, "")
+                        },
                     ): str,
                     vol.Optional(
-                        CONF_ENABLE_BACKFILL, 
-                        default=current_config.get(CONF_ENABLE_BACKFILL, False)
+                        CONF_ENABLE_BACKFILL,
+                        default=current_config.get(CONF_ENABLE_BACKFILL, False),
                     ): selector.BooleanSelector(),
                     vol.Optional(
-                        CONF_BACKFILL_DAYS, 
-                        default=current_config.get(CONF_BACKFILL_DAYS, 0)
+                        CONF_BACKFILL_DAYS,
+                        default=current_config.get(CONF_BACKFILL_DAYS, 0),
                     ): selector.NumberSelector(
                         selector.NumberSelectorConfig(
                             min=0,
@@ -214,8 +221,10 @@ class P2ZTrackerOptionsFlow(config_entries.OptionsFlow):
                         ),
                     ),
                     vol.Optional(
-                        CONF_RETENTION_DAYS, 
-                        default=current_config.get(CONF_RETENTION_DAYS, DEFAULT_RETENTION_DAYS)
+                        CONF_RETENTION_DAYS,
+                        default=current_config.get(
+                            CONF_RETENTION_DAYS, DEFAULT_RETENTION_DAYS
+                        ),
                     ): selector.NumberSelector(
                         selector.NumberSelectorConfig(
                             min=0,
@@ -225,8 +234,8 @@ class P2ZTrackerOptionsFlow(config_entries.OptionsFlow):
                         ),
                     ),
                     vol.Optional(
-                        CONF_ENABLE_AVERAGES, 
-                        default=current_config.get(CONF_ENABLE_AVERAGES, False)
+                        CONF_ENABLE_AVERAGES,
+                        default=current_config.get(CONF_ENABLE_AVERAGES, False),
                     ): selector.BooleanSelector(),
                 }
             ),
@@ -257,7 +266,7 @@ class P2ZTrackerOptionsFlow(config_entries.OptionsFlow):
                     CONF_ENABLE_AVERAGES: user_input.get(CONF_ENABLE_AVERAGES, False),
                 }
                 self._current_zones.append(new_zone)
-                
+
                 LOGGER.info(
                     "Added zone %s to tracking. Total zones: %d",
                     zone_name,
@@ -290,8 +299,12 @@ class P2ZTrackerOptionsFlow(config_entries.OptionsFlow):
                     vol.Optional(CONF_DISPLAY_NAME): selector.TextSelector(
                         selector.TextSelectorConfig(),
                     ),
-                    vol.Optional(CONF_ENABLE_BACKFILL, default=False): selector.BooleanSelector(),
-                    vol.Optional(CONF_BACKFILL_DAYS, default=7): selector.NumberSelector(
+                    vol.Optional(
+                        CONF_ENABLE_BACKFILL, default=False
+                    ): selector.BooleanSelector(),
+                    vol.Optional(
+                        CONF_BACKFILL_DAYS, default=7
+                    ): selector.NumberSelector(
                         selector.NumberSelectorConfig(
                             min=1,
                             max=365,
@@ -309,7 +322,9 @@ class P2ZTrackerOptionsFlow(config_entries.OptionsFlow):
                             unit_of_measurement="days",
                         ),
                     ),
-                    vol.Optional(CONF_ENABLE_AVERAGES, default=False): selector.BooleanSelector(),
+                    vol.Optional(
+                        CONF_ENABLE_AVERAGES, default=False
+                    ): selector.BooleanSelector(),
                 },
             ),
             errors=errors,

@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 from homeassistant.const import Platform
 from homeassistant.loader import async_get_loaded_integration
 
-from .const import CONF_PERSON_ENTITY, DEFAULT_UPDATE_INTERVAL, DOMAIN, LOGGER
+from .const import DEFAULT_UPDATE_INTERVAL, DOMAIN, LOGGER
 from .coordinator import P2ZDataUpdateCoordinator
 from .data import P2ZTrackerData
 
@@ -107,11 +107,11 @@ async def _async_cleanup_orphaned_entities(
     # Find and remove entities that are not in expected list
     entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
     LOGGER.debug(
-        "Checking cleanup: Found %d existing entities, expected %d unique IDs", 
-        len(entries), 
-        len(expected_unique_ids)
+        "Checking cleanup: Found %d existing entities, expected %d unique IDs",
+        len(entries),
+        len(expected_unique_ids),
     )
-    
+
     for entity in entries:
         if entity.unique_id not in expected_unique_ids:
             LOGGER.info("Removing orphaned entity: %s", entity.entity_id)
@@ -120,14 +120,14 @@ async def _async_cleanup_orphaned_entities(
     # Cleanup orphaned devices
     device_registry = dr.async_get(hass)
     devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
-    
+
     # Generate set of expected device identifiers
     expected_device_ids = set()
     for zone_config in tracked_zones:
         zone_name = zone_config[CONF_ZONE_NAME]
         zone_slug = slugify(zone_name.replace("zone.", ""))
         expected_device_ids.add((DOMAIN, f"{person_name}_{zone_slug}"))
-        
+
     for device in devices:
         # Check if device has any of our expected identifiers
         # A device matches if ANY of its identifiers match our expected list
@@ -136,12 +136,12 @@ async def _async_cleanup_orphaned_entities(
             if identifier in expected_device_ids:
                 is_valid = True
                 break
-        
+
         if not is_valid:
             LOGGER.debug(
-                "Removing orphaned device: %s (identifiers: %s, expected: %s)", 
-                device.name, 
+                "Removing orphaned device: %s (identifiers: %s, expected: %s)",
+                device.name,
                 device.identifiers,
-                expected_device_ids
+                expected_device_ids,
             )
             device_registry.async_remove_device(device.id)

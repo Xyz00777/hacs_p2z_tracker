@@ -70,12 +70,14 @@ class P2ZDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, float]]
         for zone_config in tracked_zones:
             zone_name = zone_config[CONF_ZONE_NAME]
             enable_averages = zone_config.get(CONF_ENABLE_AVERAGES, False)
-            
+
             # Calculate standard periods (today, week, month)
             try:
                 times = await self._calculate_zone_times(zone_name)
             except Exception as err:
-                LOGGER.error("Error calculating standard times for zone %s: %s", zone_name, err)
+                LOGGER.error(
+                    "Error calculating standard times for zone %s: %s", zone_name, err
+                )
                 times = {
                     PERIOD_TODAY: 0.0,
                     PERIOD_WEEK: 0.0,
@@ -91,24 +93,30 @@ class P2ZDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, float]]
                         retention = zone_config.get(CONF_RETENTION_DAYS, 0)
                         # Default to 90 days if unlimited (0) to keep performance reasonable
                         days = retention if retention > 0 else 90
-                        self._averages_data[zone_name] = await self._calculate_weekday_averages(zone_name, days)
-                    
+                        self._averages_data[
+                            zone_name
+                        ] = await self._calculate_weekday_averages(zone_name, days)
+
                     # Merge averages into times
                     times.update(self._averages_data[zone_name])
                 except Exception as err:
-                    LOGGER.error("Error calculating averages for zone %s: %s", zone_name, err)
+                    LOGGER.error(
+                        "Error calculating averages for zone %s: %s", zone_name, err
+                    )
                     # Don't fail standard sensors if averages fail
                     # Add 0s for weekday averages
-                    times.update({
-                        PERIOD_MONDAY: 0.0,
-                        PERIOD_TUESDAY: 0.0,
-                        PERIOD_WEDNESDAY: 0.0,
-                        PERIOD_THURSDAY: 0.0,
-                        PERIOD_FRIDAY: 0.0,
-                        PERIOD_SATURDAY: 0.0,
-                        PERIOD_SUNDAY: 0.0,
-                    })
-            
+                    times.update(
+                        {
+                            PERIOD_MONDAY: 0.0,
+                            PERIOD_TUESDAY: 0.0,
+                            PERIOD_WEDNESDAY: 0.0,
+                            PERIOD_THURSDAY: 0.0,
+                            PERIOD_FRIDAY: 0.0,
+                            PERIOD_SATURDAY: 0.0,
+                            PERIOD_SUNDAY: 0.0,
+                        }
+                    )
+
             zone_data[zone_name] = times
 
         self.last_update_success_time = dt_util.now()
@@ -145,9 +153,7 @@ class P2ZDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, float]]
 
         result = {}
         for period, start_time in periods.items():
-            hours = await self._calculate_time_in_zone(
-                zone_entity_id, start_time, now
-            )
+            hours = await self._calculate_time_in_zone(zone_entity_id, start_time, now)
             result[period] = hours
 
         return result
@@ -171,7 +177,7 @@ class P2ZDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, float]]
         if not states:
             LOGGER.info("No history states found for %s", self._person_entity)
             return 0.0
-            
+
         if self._person_entity not in states:
             LOGGER.info("Person entity %s not in history states", self._person_entity)
             return 0.0
@@ -180,14 +186,14 @@ class P2ZDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, float]]
         if not person_states:
             LOGGER.info("Empty state list for %s", self._person_entity)
             return 0.0
-            
+
         LOGGER.info(
-            "Found %d states for %s between %s and %s (zone=%s)", 
-            len(person_states), 
+            "Found %d states for %s between %s and %s (zone=%s)",
+            len(person_states),
             self._person_entity,
             start_time,
             end_time,
-            zone_entity_id
+            zone_entity_id,
         )
 
         # Get the zone's friendly name from the zone entity
@@ -196,10 +202,12 @@ class P2ZDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, float]]
         if zone_state is None:
             LOGGER.warning("Zone entity %s not found", zone_entity_id)
             return 0.0
-            
+
         # The zone's friendly name is in the attributes
-        target_zone = zone_state.attributes.get("friendly_name", zone_entity_id.replace("zone.", ""))
-        
+        target_zone = zone_state.attributes.get(
+            "friendly_name", zone_entity_id.replace("zone.", "")
+        )
+
         # Log first few states to see what we're working with
         if len(person_states) > 0:
             sample_states = [s.state for s in person_states[:5]]
@@ -207,7 +215,7 @@ class P2ZDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, float]]
                 "Target zone: '%s' (from %s), Sample person states: %s",
                 target_zone,
                 zone_entity_id,
-                sample_states
+                sample_states,
             )
 
         total_seconds = 0.0
@@ -216,7 +224,7 @@ class P2ZDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, float]]
         for i, state in enumerate(person_states):
             current_state = state.state
             current_time = state.last_updated
-            
+
             # Ensure we don't count time before the start_time
             if current_time < start_time:
                 current_time = start_time
@@ -233,7 +241,7 @@ class P2ZDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, float]]
                     # Ensure we don't count time after end_time (though unlikely with history)
                     if current_time > end_time:
                         current_time = end_time
-                        
+
                     duration = (current_time - last_zone_entry).total_seconds()
                     total_seconds += duration
                     last_zone_entry = None
@@ -251,7 +259,7 @@ class P2ZDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, float]]
             self._person_entity,
             zone_entity_id,
             start_time,
-            end_time
+            end_time,
         )
         return hours
 
@@ -261,17 +269,23 @@ class P2ZDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, float]]
         week_start = dt - timedelta(days=days_since_monday)
         return dt_util.start_of_local_day(week_start)
 
-    async def _calculate_weekday_averages(self, zone_name: str, days: int) -> dict[str, float]:
+    async def _calculate_weekday_averages(
+        self, zone_name: str, days: int
+    ) -> dict[str, float]:
         """Calculate average time spent in zone per weekday over the last X days."""
         now = dt_util.now()
         start_time = now - timedelta(days=days)
-        
+
         # Get zone friendly name
-        zone_entity_id = f"zone.{zone_name}" if not zone_name.startswith("zone.") else zone_name
+        zone_entity_id = (
+            f"zone.{zone_name}" if not zone_name.startswith("zone.") else zone_name
+        )
         zone_state = self.hass.states.get(zone_entity_id)
         if zone_state is None:
             return {}
-        target_zone = zone_state.attributes.get("friendly_name", zone_name.replace("zone.", ""))
+        target_zone = zone_state.attributes.get(
+            "friendly_name", zone_name.replace("zone.", "")
+        )
 
         # Fetch history
         states = await get_instance(self.hass).async_add_executor_job(
@@ -281,35 +295,45 @@ class P2ZDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, float]]
             now,
             [self._person_entity],
             None,
-            True, # include_start_time_state
-            True, # significant_changes_only
+            True,  # include_start_time_state
+            True,  # significant_changes_only
         )
 
         if not states or self._person_entity not in states:
-            LOGGER.debug("No history found for %s when calculating averages", self._person_entity)
+            LOGGER.debug(
+                "No history found for %s when calculating averages", self._person_entity
+            )
             return {}
 
         person_states = states[self._person_entity]
-        LOGGER.debug("Found %d states for averages calculation (target zone: %s)", len(person_states), target_zone)
-        
+        LOGGER.debug(
+            "Found %d states for averages calculation (target zone: %s)",
+            len(person_states),
+            target_zone,
+        )
+
         # Buckets for each weekday (0=Monday, 6=Sunday)
         # total_seconds: sum of duration
         # unique_days: set of unique dates (YYYY-MM-DD) encountered for this weekday
-        weekday_stats = {i: {"total_seconds": 0.0, "unique_days": set()} for i in range(7)}
-        
+        weekday_stats = {
+            i: {"total_seconds": 0.0, "unique_days": set()} for i in range(7)
+        }
+
         for i in range(len(person_states) - 1):
             state = person_states[i]
             next_state = person_states[i + 1]
-            
+
             if state.state == target_zone:
-                duration = (next_state.last_changed - state.last_changed).total_seconds()
+                duration = (
+                    next_state.last_changed - state.last_changed
+                ).total_seconds()
                 weekday = state.last_changed.weekday()
                 date_str = state.last_changed.strftime("%Y-%m-%d")
-                
+
                 # Exclude today from historical average to avoid skewing with incomplete data
                 if date_str == now.strftime("%Y-%m-%d"):
                     continue
-                    
+
                 weekday_stats[weekday]["total_seconds"] += duration
                 weekday_stats[weekday]["unique_days"].add(date_str)
 
@@ -325,7 +349,7 @@ class P2ZDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, float]]
             5: PERIOD_SATURDAY,
             6: PERIOD_SUNDAY,
         }
-        
+
         results = {}
         for i, stats in weekday_stats.items():
             count = len(stats["unique_days"])
@@ -334,6 +358,6 @@ class P2ZDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, float]]
                 results[weekday_map[i]] = round(avg_seconds / 3600, 2)
             else:
                 results[weekday_map[i]] = 0.0
-                
+
         LOGGER.debug("Calculated weekday averages for %s: %s", zone_name, results)
         return results
