@@ -1,23 +1,67 @@
 name: Release
 
 on:
-  release:
-    types: [published]
+  push:
+    paths:
+      - 'custom_components/p2z_tracker/manifest.json'
 
 jobs:
   release:
-    name: Prepare Release
+    name: Create Release
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Get Version and Branch Info
+        id: info
+        run: |
+          VERSION=$(jq -r .version custom_components/p2z_tracker/manifest.json)
+          BRANCH=${GITHUB_REF#refs/heads/}
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          
+          if [ "$BRANCH" = "main" ]; then
+            TAG="v$VERSION"
+            PRERELEASE="false"
+            echo "Creating Stable Release: $TAG"
+          else
+            # Sanitize branch name for tag (replace / with -)
+            SAFE_BRANCH=$(echo "$BRANCH" | tr '/' '-')
+            TAG="v$VERSION-$SAFE_BRANCH-$SHORT_SHA"
+            PRERELEASE="true"
+            echo "Creating Pre-Release: $TAG"
+          fi
+          
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "prerelease=$PRERELEASE" >> $GITHUB_OUTPUT
+
+      - name: Check if Tag Exists
+        id: check_tag
+        run: |
+          if git rev-parse "${{ steps.info.outputs.tag }}" >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "Tag ${{ steps.info.outputs.tag }} already exists. Skipping."
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Zip Component
+        if: steps.check_tag.outputs.exists == 'false'
         run: |
           cd custom_components
           zip -r ../p2z_tracker.zip p2z_tracker
 
-      - name: Upload Release Asset
+      - name: Create Release
+        if: steps.check_tag.outputs.exists == 'false'
         uses: softprops/action-gh-release@v1
         with:
+          tag_name: ${{ steps.info.outputs.tag }}
+          name: ${{ steps.info.outputs.tag }}
           files: p2z_tracker.zip
+          generate_release_notes: true
+          prerelease: ${{ steps.info.outputs.prerelease }}
