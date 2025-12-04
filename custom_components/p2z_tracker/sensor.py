@@ -159,23 +159,10 @@ class ZoneTimeSensor(CoordinatorEntity[P2ZDataUpdateCoordinator], SensorEntity):
         # Format period name for display
         period_name = self._period.replace("_", " ").title()
         
-        # Add numbering for weekday averages to ensure correct sorting
-        if self._period == PERIOD_MONDAY:
-            period_name = "1. Monday Avg"
-        elif self._period == PERIOD_TUESDAY:
-            period_name = "2. Tuesday Avg"
-        elif self._period == PERIOD_WEDNESDAY:
-            period_name = "3. Wednesday Avg"
-        elif self._period == PERIOD_THURSDAY:
-            period_name = "4. Thursday Avg"
-        elif self._period == PERIOD_FRIDAY:
-            period_name = "5. Friday Avg"
-        elif self._period == PERIOD_SATURDAY:
-            period_name = "6. Saturday Avg"
-        elif self._period == PERIOD_SUNDAY:
-            period_name = "7. Sunday Avg"
+        if self._period in WEEKDAY_PERIODS:
+            period_name = f"{period_name} Average"
         elif self._is_average:
-            period_name = f"{period_name} Avg"
+            period_name = f"{period_name} Average"
 
         self._attr_name = f"{self._display_name} {period_name}"
 
