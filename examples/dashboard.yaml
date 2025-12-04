@@ -14,7 +14,7 @@ span:
   start: week
 series:
   # Current week - daily columns
-  - entity: sensor.p2z_xyz00777_work_today  # Replace with your sensor
+  - entity: sensor.p2z_<username>_<zone>_today  # Replace with your sensor
     name: This Week
     type: column
     color: '#ff9800'
@@ -25,7 +25,7 @@ series:
       datalabels: true
   
   # Last week - daily columns (semi-transparent)
-  - entity: sensor.p2z_xyz00777_work_today  # Replace with your sensor
+  - entity: sensor.p2z_<username>_<zone>_today  # Replace with your sensor
     name: Last Week
     type: column
     color: '#2196f3'
@@ -38,7 +38,7 @@ series:
       datalabels: false
   
   # Average line
-  - entity: sensor.p2z_xyz00777_work_today  # Replace with your sensor
+  - entity: sensor.p2z_<username>_<zone>_today  # Replace with your sensor
     name: Average
     type: line
     color: red
@@ -56,7 +56,7 @@ series:
 type: custom:apexcharts-card
 header:
   show: true
-  title: CCC-FFM Zone Tracking
+  title: Zone Tracking
   show_states: true
   colorize_states: true
 graph_span: 7d
@@ -64,7 +64,7 @@ span:
   start: week
 series:
   # Weekly total in header
-  - entity: sensor.p2z_xyz00777_ccc_ffm_week  # Replace with your sensor
+  - entity: sensor.p2z_<username>_<zone>_week  # Replace with your sensor
     name: This Week
     color: '#ff9800'
     show:
@@ -72,7 +72,7 @@ series:
       in_chart: false
   
   # Monthly total in header
-  - entity: sensor.p2z_xyz00777_ccc_ffm_month  # Replace with your sensor
+  - entity: sensor.p2z_<username>_<zone>_month  # Replace with your sensor
     name: This Month
     color: '#4caf50'
     show:
@@ -80,7 +80,7 @@ series:
       in_chart: false
   
   # Daily breakdown - current week
-  - entity: sensor.p2z_xyz00777_ccc_ffm_today  # Replace with your sensor
+  - entity: sensor.p2z_<username>_<zone>_today  # Replace with your sensor
     name: Daily
     type: column
     color: '#ff9800'
@@ -93,7 +93,7 @@ series:
       datalabels: true
   
   # Daily breakdown - last week (for comparison)
-  - entity: sensor.p2z_xyz00777_ccc_ffm_today  # Replace with your sensor
+  - entity: sensor.p2z_<username>_<zone>_today  # Replace with your sensor
     name: Last Week
     type: column
     color: '#2196f3'
@@ -121,7 +121,7 @@ span:
   start: month
 series:
   # Monthly total
-  - entity: sensor.p2z_xyz00777_work_month  # Replace with your sensor
+  - entity: sensor.p2z_<username>_<zone>_month  # Replace with your sensor
     name: Total This Month
     color: '#4caf50'
     show:
@@ -129,7 +129,7 @@ series:
       in_chart: false
   
   # Daily columns for entire month
-  - entity: sensor.p2z_xyz00777_work_today  # Replace with your sensor
+  - entity: sensor.p2z_<username>_<zone>_today  # Replace with your sensor
     name: Daily
     type: column
     color: '#4caf50'
@@ -143,7 +143,7 @@ series:
 # Example 4: Simple Entity Card
 # Shows current week total with trend
 type: entity
-entity: sensor.p2z_xyz00777_work_week  # Replace with your sensor
+entity: sensor.p2z_<username>_<zone>_week  # Replace with your sensor
 name: Time at Work This Week
 icon: mdi:briefcase-clock
 
@@ -153,21 +153,52 @@ type: grid
 columns: 2
 cards:
   - type: entity
-    entity: sensor.p2z_xyz00777_work_week  # Replace
+    entity: sensor.p2z_<username>_<zone1>_week  # Replace
     name: Work (Week)
     icon: mdi:briefcase
   
   - type: entity
-    entity: sensor.p2z_xyz00777_gym_week  # Replace
+    entity: sensor.p2z_<username>_<zone2>_week  # Replace
     name: Gym (Week)
     icon: mdi:dumbbell
   
   - type: entity
-    entity: sensor.p2z_xyz00777_work_month  # Replace
+    entity: sensor.p2z_<username>_<zone1>_month  # Replace
     name: Work (Month)
     icon: mdi:briefcase
   
   - type: entity
-    entity: sensor.p2z_xyz00777_gym_month  # Replace
+    entity: sensor.p2z_<username>_<zone2>_month  # Replace
     name: Gym (Month)
     icon: mdi:dumbbell
+
+---
+# Example 6: Weekday Averages Chart
+# Shows average time spent per weekday
+type: custom:apexcharts-card
+header:
+  show: true
+  title: Average Time at Work by Day
+  show_states: true
+  colorize_states: true
+series:
+  - entity: sensor.p2z_<username>_<zone>_monday_avg
+    name: Monday
+    type: column
+    color: '#ff9800'
+  - entity: sensor.p2z_<username>_<zone>_tuesday_avg
+    name: Tuesday
+    type: column
+    color: '#ff9800'
+  - entity: sensor.p2z_<username>_<zone>_wednesday_avg
+    name: Wednesday
+    type: column
+    color: '#ff9800'
+  - entity: sensor.p2z_<username>_<zone>_thursday_avg
+    name: Thursday
+    type: column
+    color: '#ff9800'
+  - entity: sensor.p2z_<username>_<zone>_friday_avg
+    name: Friday
+    type: column
+    color: '#ff9800'

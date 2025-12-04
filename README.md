@@ -89,11 +89,16 @@ Sensors are automatically created with the following naming pattern:
 sensor.p2z_{person}_{zone}_{period}
 ```
 
-**Example**:
+**Standard Sensors**:
 For person `person.john` tracking zone `zone.work`:
 - `sensor.p2z_john_work_today` - Hours at work today
 - `sensor.p2z_john_work_week` - Hours at work this week
 - `sensor.p2z_john_work_month` - Hours at work this month
+
+**Average Sensors** (if enabled):
+- `sensor.p2z_john_work_monday_avg`
+- `sensor.p2z_john_work_tuesday_avg`
+- ...and so on for each day.
 
 ## Sensor Details
 
@@ -107,6 +112,20 @@ Each sensor provides:
   - `period` - Time period (today/week/month)
   - `backfilled` - Whether historical data was loaded
   - `last_updated` - Last update timestamp
+
+## Examples & Templates
+
+You can find example configurations in the `examples/` directory of this repository.
+
+### Dashboard Examples
+See [`examples/dashboard.yaml`](examples/dashboard.yaml) for pre-configured ApexCharts cards.
+**Requirement**: These examples use the [ApexCharts Card](https://github.com/RomRider/apexcharts-card) (install via HACS).
+
+### Template Sensors
+See [`examples/templates.md`](examples/templates.md) for advanced use cases like:
+- Goal tracking (e.g., "40h work week")
+- Comparisons (e.g., "Time vs Last Month")
+- Custom alerts
 
 ## Use Cases
 
