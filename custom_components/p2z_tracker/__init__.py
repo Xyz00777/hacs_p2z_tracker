@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 from homeassistant.const import Platform
 from homeassistant.loader import async_get_loaded_integration
 
-from .const import CONF_PERSON_ENTITY, DEFAULT_UPDATE_INTERVAL, DOMAIN, LOGGER
+from .const import DEFAULT_UPDATE_INTERVAL, DOMAIN, LOGGER
 from .coordinator import P2ZDataUpdateCoordinator
 from .data import P2ZTrackerData
 

@@ -6,7 +6,6 @@ from typing import Any
 
 import voluptuous as vol
 from homeassistant import config_entries
-from homeassistant.components import zone
 from homeassistant.helpers import entity_registry as er, selector
 
 from .const import (
