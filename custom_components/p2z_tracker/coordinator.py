@@ -70,12 +70,20 @@ class P2ZDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, float]]
             zone_name = zone_config[CONF_ZONE_NAME]
             enable_averages = zone_config.get(CONF_ENABLE_AVERAGES, False)
             
+            # Calculate standard periods (today, week, month)
             try:
-                # Calculate standard periods (today, week, month)
                 times = await self._calculate_zone_times(zone_name)
-                
-                # Calculate averages if enabled
-                if enable_averages:
+            except Exception as err:
+                LOGGER.error("Error calculating standard times for zone %s: %s", zone_name, err)
+                times = {
+                    PERIOD_TODAY: 0.0,
+                    PERIOD_WEEK: 0.0,
+                    PERIOD_MONTH: 0.0,
+                }
+
+            # Calculate averages if enabled
+            if enable_averages:
+                try:
                     # Check if we need to calculate averages (first run or new day)
                     # We store averages in self._averages_data to avoid querying history every update
                     if zone_name not in self._averages_data:
@@ -86,24 +94,21 @@ class P2ZDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, float]]
                     
                     # Merge averages into times
                     times.update(self._averages_data[zone_name])
-                
-                zone_data[zone_name] = times
-                
-            except Exception as err:  # pylint: disable=broad-except
-                LOGGER.error("Error calculating time for zone %s: %s", zone_name, err)
-                # Return 0 values on error to keep sensor available
-                zone_data[zone_name] = {
-                    PERIOD_TODAY: 0.0,
-                    PERIOD_WEEK: 0.0,
-                    PERIOD_MONTH: 0.0,
-                    PERIOD_MONDAY: 0.0,
-                    PERIOD_TUESDAY: 0.0,
-                    PERIOD_WEDNESDAY: 0.0,
-                    PERIOD_THURSDAY: 0.0,
-                    PERIOD_FRIDAY: 0.0,
-                    PERIOD_SATURDAY: 0.0,
-                    PERIOD_SUNDAY: 0.0,
-                }
+                except Exception as err:
+                    LOGGER.error("Error calculating averages for zone %s: %s", zone_name, err)
+                    # Don't fail standard sensors if averages fail
+                    # Add 0s for weekday averages
+                    times.update({
+                        PERIOD_MONDAY: 0.0,
+                        PERIOD_TUESDAY: 0.0,
+                        PERIOD_WEDNESDAY: 0.0,
+                        PERIOD_THURSDAY: 0.0,
+                        PERIOD_FRIDAY: 0.0,
+                        PERIOD_SATURDAY: 0.0,
+                        PERIOD_SUNDAY: 0.0,
+                    })
+            
+            zone_data[zone_name] = times
 
         self.last_update_success_time = dt_util.now()
         return zone_data
